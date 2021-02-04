@@ -1,0 +1,109 @@
+---
+title: "Zebrafish CAGE shifting analysis"
+author: "Gabe Zentner"
+output: html_document
+---
+
+<!-- wget command to get bigwigs -->
+<!-- wget -r -np -nd -A plus.bw,minus.bw -I /zebrafish/CAGE/ \ -->
+<!-- http://promshift.genereg.net/zebrafish/CAGE/ -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+```{r}
+library(TSRexploreR)
+library(filesstrings)
+library(tidyverse)
+library(GenomicRanges)
+library(writexl)
+```
+
+### Data preparation
+```{r}
+# Generate sample sheet
+samples <- data.frame(sample_name = before_last_dot(before_last_dot(list.files("bigwigs", pattern = "plus"))), 
+                      file_1 = list.files("bigwigs", full.names = TRUE, pattern = "plus"), 
+                      file_2 = list.files("bigwigs", full.names = TRUE, pattern = "minus"),
+                      condition = "zf")
+
+samples2 <- dplyr::filter(samples, sample_name == "unfertilized.egg" | sample_name == "prim20")
+
+# Read in annotation
+annotation <- file.path("danRer7.refGene.gtf")
+
+# Create TSRexploreR object
+exp <- tsr_explorer(sample_sheet = samples2, genome_annotation = annotation)
+
+# Import TSS bigWigs
+exp <- tss_import(exp)
+
+# Change negative-strand TSS negative scores to positive
+corrected_scores <- map(exp@experiment$TSSs, function(x) {
+  as.data.frame(x) %>%
+    mutate(score = ifelse(strand == "-", score * -1, score)) %>%
+    makeGRangesFromDataFrame(keep.extra.columns = TRUE)
+})
+
+exp@experiment$TSSs <- corrected_scores
+
+# Format TSSs
+exp <- format_counts(exp, data_type = "tss")
+```
+
+### Threshold exploration
+```{r fig.align = "center"}
+# Annotate TSSs relative to known genomic features
+exp <- annotate_features(exp, data_type = "tss", feature_type = "transcript", 
+                         upstream = 500, downstream = 500)
+
+# Perform threshold analysis
+
+# Plot threshold analysis
+plot_threshold_exploration(exp, steps = 1, max_threshold = 20, 
+                           samples = c("unfertilized.egg", "prim20"),
+                           use_normalized = FALSE, point_size = 1,
+                           ncol = 2) +
+  scale_color_viridis_c() +
+  xlim(0,20) +
+  geom_vline(xintercept = 3, linetype = 2)
+```
+
+### TSR detection
+```{r}
+exp <- tss_clustering(exp, max_distance = 25, max_width = 250, 
+                      threshold = 3, n_samples = 1)
+```
+
+### Shifting analysis
+```{r}
+# Unfertilized egg vs. prim-20 shifting
+exp <- tss_shift(exp, 
+                 sample_1 = c(TSS = "unfertilized.egg", TSR = "unfertilized.egg"),
+                 sample_2 = c(TSS = "prim20", TSR = "prim20"),
+                 max_distance = 100, min_threshold = 10, n_resamples = 1000L,
+                 comparison_name = "prim20_vs_unfertilized_egg", fdr_cutoff = 0.05)
+```
+
+
+### Write shifts to XLSX format for supplement
+```{r}
+exp <- annotate_features(exp, data_type = "shift", feature_type = "transcript", 
+                         upstream = 500, downstream = 500)
+
+write_xlsx(exp@shifting$results, "TSRexploreR_shifts.xlsx")
+```
+
+### Gene tracks
+```{r fig.align = "center"}
+for(i in c("kdm7ab", "pif1", "epcam", "tcf25")) {
+  gene_tracks(exp, feature_name = i, promoter_only = TRUE, 
+              samples = c(TSS = "unfertilized.egg", TSS = "prim20"),
+              use_normalized = FALSE, axis_scale = 1, upstream = 100, 
+              downstream = 100, tss_colors = viridis::viridis(4)
+              )
+}
+```
