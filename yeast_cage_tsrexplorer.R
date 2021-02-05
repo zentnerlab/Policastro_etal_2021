@@ -63,6 +63,14 @@ plot_threshold_exploration(exp, samples = samples_ordered, max_threshold = 50,
         axis.text = element_text(color = "black", size = 22)) +
   geom_vline(xintercept = 10, linetype = 2)
 
+# Get promoter-proximal fractions for text
+thresh <- plot_threshold_exploration(exp, samples = samples_ordered, max_threshold = 50,
+                                     return_table = TRUE) %>%
+    dplyr::filter(threshold == 10)
+
+min(thresh$frac_promoter_proximal)
+max(thresh$frac_promoter_proximal)
+
 
 ## ----fig.align = "center"--------------------------------------------------------------------------------------------------------------
 # Genomic distribution (Fig. 1C)
@@ -213,7 +221,7 @@ plot_num_de(exp, data_type = "tsr", de_comparisons = "all",
         legend.position = "top", legend.direction = "horizontal") 
 
 
-## ----fig.align = "center", fig.cap = "MA plot for YPG vs. YPD comparison"--------------------------------------------------------------
+## ----fig.align = "center", fig.cap = "MA plot for Gal vs. YPD comparison"--------------------------------------------------------------
 # MA plot (Fig. 2E)
 plot_ma(exp, data_type = "tsr", de_comparisons = "ScerGal_vs_YPD", size = 1) +
   scale_color_viridis_d(end = 0.6, direction = -1) +
@@ -222,7 +230,7 @@ plot_ma(exp, data_type = "tsr", de_comparisons = "ScerGal_vs_YPD", size = 1) +
         axis.text = element_text(color = "black", size = 22))
 
 
-## ----fig.align = "center", fig.cap = "Volcano plot for YPG vs. YPD comparison"---------------------------------------------------------
+## ----fig.align = "center", fig.cap = "Volcano plot for Gal vs. YPD comparison"---------------------------------------------------------
 # Volcano plot (Fig. 2F)
 plot_volcano(exp, data_type = "tsr", de_comparisons = "ScerGal_vs_YPD", size = 1) +
   theme_bw() +
@@ -273,12 +281,12 @@ go_enrichment <- compareCluster(
   OrgDb = "org.Sc.sgd.db",
   pAdjustMethod = "fdr",
   ont = "BP",
-  keyType="ENSEMBL"
+  keyType = "ENSEMBL",
 )
 
 dotplot(go_enrichment, font.size = 12, showCategory = 10) +
   scale_color_viridis_c() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 22),
+  theme(axis.text = element_text(size = 22),
         text = element_text(color = "black", size = 22))
   
 
