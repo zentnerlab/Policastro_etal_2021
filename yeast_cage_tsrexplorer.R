@@ -96,7 +96,8 @@ exp <- normalize_counts(exp, data_type = "tss", method = "deseq2")
 
 # PCA (Fig. 1E)
 plot_reduction(exp, data_type = "tss", legendPosition = "right", 
-               colby = "condition", labSize = 0, drawConnectors = FALSE, 
+               colby = "condition", labSize = 8, drawConnectors = TRUE, 
+               labhjust = -0.05, labvjust = 0.5,
                colkey = c(ScerArrest = "#440154FF",
                           ScerDD = "#472D7BFF",
                           ScerDSA = "#3B528BFF",
