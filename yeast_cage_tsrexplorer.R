@@ -262,12 +262,20 @@ down <- enrichment_data %>%
 
 split_list <- list(up = up$geneId, down = down$geneId)
 
-# DE heatmap
+# DE heatmaps
 plot_heatmap(exp, samples = c("ScerYPD.1", "ScerGal.1"), data_type = "tsr", threshold = 10, 
              log2_transform = TRUE, use_normalized = TRUE, high_color = "#440154FF", 
              upstream = 1000, downstream = 1000, ncol = 2, rasterize = TRUE,
              raster_dpi = 150, x_axis_breaks = 500, ordering = score, order_descending = TRUE,
              order_samples = "ScerYPD.1", split_by = split_list) +
+    theme(text = element_text(color = "black", size = 22),
+          axis.text = element_text(color = "black", size = 22))
+
+# Log2 heatmap
+plot_heatmap(exp, samples=c("ScerYPD.1", "ScerGal.1"), data_type = "tsr", threshold = 10, upstream = 1000, downstream = 1000, 
+             rasterize = TRUE, raster_dpi = 150, x_axis_breaks = 500, use_normalized = TRUE,
+             diff_heatmap_list = list(Gal = c("ScerYPD.1", "ScerGal.1")), 
+             high_color = "#3CBC75FF", low_color = "#440154FF") +
     theme(text = element_text(color = "black", size = 22),
           axis.text = element_text(color = "black", size = 22))
 
@@ -289,5 +297,3 @@ dotplot(go_enrichment, font.size = 12, showCategory = 10) +
   scale_color_viridis_c() +
   theme(axis.text = element_text(size = 22),
         text = element_text(color = "black", size = 22))
-  
-

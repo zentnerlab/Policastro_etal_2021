@@ -99,11 +99,13 @@ write_xlsx(exp@shifting$results, "TSRexploreR_shifts.xlsx")
 
 ### Gene tracks
 ```{r fig.align = "center"}
-for(i in c("kdm7ab", "pif1", "epcam", "tcf25")) {
+for(i in c("kdm7ab", "pif1", "epcam", "tcf25", "mxi1", "homeza", "polr2j", "med7")) {
+  pdf(paste0("~/Desktop/Manuscripts/TSRexploreR/panels/", i, ".pdf"), width = 4, height = 6)
   gene_tracks(exp, feature_name = i, promoter_only = TRUE, 
               samples = c(TSS = "unfertilized.egg", TSS = "prim20"),
               use_normalized = FALSE, axis_scale = 1, upstream = 100, 
               downstream = 100, tss_colors = viridis::viridis(4)
               )
+  dev.off()
 }
 ```
